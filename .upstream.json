@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/NVIDIA-AI-Blueprints/nemotron-voice-agent.git",
+  "revision": "d93ce3ed7a635fac3cf39f7f88888c809298cb8d",
+  "import": "full upstream git history; CPU implementation based directly on recorded revision",
+  "pipecat": "1.5.0",
+  "nemo_speech_revision": "a5b6953c4a579a2bbd1c0913ad8a85c2a4d99953",
+  "llama_cpp_revision": "56b9eb280a67796379d8625729fb03d72c70789d",
+  "voicevox_engine_version": "0.25.2",
+  "base_tag": "upstream-base"
+}

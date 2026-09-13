@@ -8,6 +8,7 @@ from collections.abc import Mapping
 
 _PLATFORM_ALIASES = {
     "cloud": "cloud",
+    "cpu": "cpu",
     "workstation": "workstation",
     "dgxspark": "dgxspark",
     "jetsonthor": "jetson",

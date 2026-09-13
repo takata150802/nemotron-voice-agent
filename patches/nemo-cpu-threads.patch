@@ -1,0 +1,51 @@
+diff --git a/src/runtime/ggml/session.cpp b/src/runtime/ggml/session.cpp
+index 1a2d8df..4569e98 100644
+--- a/src/runtime/ggml/session.cpp
++++ b/src/runtime/ggml/session.cpp
+@@ -6,6 +6,7 @@
+ // Licensed under the MIT License. See THIRD_PARTY_NOTICES.md.
+ #include <algorithm>
+ #include <chrono>
++#include <cstdlib>
+ #include <mutex>
+ #include <unordered_set>
+ 
+@@ -13,6 +14,18 @@
+ 
+ namespace ggml_runtime {
+ 
++// Local fork control: upstream fixes scheduler compute to four threads.
++// Use the ggml backend's existing thread-setting API for every compute path.
++static int cpu_threads() {
++    const char* value = std::getenv("NEMO_ASR_THREADS");
++    if (!value) return 4;
++    char* end = nullptr;
++    const long count = std::strtol(value, &end, 10);
++    if (*end || count < 1 || count > 256)
++        throw std::runtime_error("NEMO_ASR_THREADS must be between 1 and 256");
++    return static_cast<int>(count);
++}
++
+ Session::~Session() = default;
+ 
+ Session::Session(BackendManager& backend_manager, Module* module, GGUFLoader* gguf_loader) {
+@@ -804,6 +817,10 @@ Session::run_impl(
+         const bool direct = !fresh && cr.direct_ok && state == nullptr && cr.state_views.empty();
+         if (direct) {
+             auto _t2d = _clk::now();
++            auto* reg = ggml_backend_dev_backend_reg(ggml_backend_get_device(cr.direct_backend));
++            auto* set_threads = (ggml_backend_set_n_threads_t)
++                ggml_backend_reg_get_proc_address(reg, "ggml_backend_set_n_threads");
++            if (set_threads) set_threads(cr.direct_backend, cpu_threads());
+             if (ggml_backend_graph_compute_async(cr.direct_backend, cr.gf) != GGML_STATUS_SUCCESS) {
+                 GGMLF_LOG_ERROR("Failed to compute graph (direct)\n");
+                 throw std::runtime_error("failed to compute graph");
+@@ -908,7 +925,7 @@ Session::run_impl(
+         }
+ 
+         auto _t2 = _clk::now();
+-        if (!ggml_graph_compute_helper_async(sched.get(), cr.gf, 4)) {
++        if (!ggml_graph_compute_helper_async(sched.get(), cr.gf, cpu_threads())) {
+             GGMLF_LOG_ERROR("Failed to compute graph\n");
+             throw std::runtime_error("failed to compute graph");
+         }

@@ -200,6 +200,7 @@ export interface TransportOption {
 }
 
 export interface DeploymentResponse {
+  cpu_only?: boolean;
   active: DeploymentOption;
   selectable: boolean;
   options: DeploymentOption[];

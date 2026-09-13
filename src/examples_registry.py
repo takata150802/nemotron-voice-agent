@@ -197,7 +197,9 @@ def _load_local_service_catalog(example_dir: Path) -> dict[str, dict]:
     data = _load_yaml_mapping(example_dir / "services.local.yaml")
     platform_data = select_runtime_platform_catalog(data)
     if platform_data is not None:
-        return _rewrite_catalog_for_host_runtime(_normalize_service_catalog(platform_data))
+        from services.local_config import configure_cpu_catalog
+
+        return configure_cpu_catalog(_rewrite_catalog_for_host_runtime(_normalize_service_catalog(platform_data)))
 
     variants: dict[str, dict[str, list[tuple[str, dict]]]] = {}
     for platform_name, platform_data in data.items():
@@ -274,6 +276,10 @@ def _resolve_service_default(example: EnrichedExample, category: str, service_id
     available, which keeps cloud-only recipe defaults usable.
     """
     cloud, local = _load_service_catalogs(str(_example_dir(example)))
+    from services.local_config import cpu_mode
+
+    if cpu_mode():
+        cloud = {}
     local_section = local.get(category, {})
     local_entry = local_section.get(service_id) if isinstance(local_section, dict) else None
     if isinstance(local_entry, dict) and is_endpoint_reachable(_entry_endpoint(local_entry)):
@@ -375,6 +381,10 @@ def _load_examples(data: dict) -> dict[str, ExampleEntry]:
         agent_prompt_keys = entry.get("agent_prompt_keys", [])
         activity_check = entry.get("activity_check")
         defaults = entry.get("defaults", {})
+        from services.local_config import cpu_mode
+
+        if cpu_mode():
+            defaults = entry.get("platform_defaults", {}).get("cpu", defaults)
         if not label or not bot_spec:
             raise RuntimeError(f"Example {example_id!r} requires label and bot")
         if not isinstance(slots, list) or not all(isinstance(slot, str) for slot in slots):

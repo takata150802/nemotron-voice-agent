@@ -4,10 +4,10 @@
 import { useMemo, type ComponentProps } from "react";
 import { PipecatClient } from "@pipecat-ai/client-js";
 import { PipecatClientProvider, PipecatClientAudio } from "@pipecat-ai/client-react";
-import { SmallWebRTCTransport } from "@pipecat-ai/small-webrtc-transport";
+import { SmallWebRTCTransport, WavMediaManager } from "@pipecat-ai/small-webrtc-transport";
 import { WebSocketTransport, ProtobufFrameSerializer } from "@pipecat-ai/websocket-transport";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient, useIceServers } from "./api";
+import { queryClient, useIceServers, useDeployment } from "./api";
 import { AppProvider } from "./context/AppContext";
 import { useApp } from "./context/useApp";
 import { Header } from "./components/Header";
@@ -20,6 +20,7 @@ type ProviderClient = ComponentProps<typeof PipecatClientProvider>["client"];
 
 function AppInner() {
   const { selectedTransport } = useApp();
+  const { data: deployment } = useDeployment();
   const { data: iceConfig, isFetched: iceServersLoaded } = useIceServers();
   const iceServers = iceConfig?.iceServers ?? EMPTY_ICE_SERVERS;
 
@@ -36,12 +37,15 @@ function AppInner() {
         enableScreenShare: false,
       });
     }
-    if (!iceServersLoaded) return null;
+    if (!iceServersLoaded || !deployment) return null;
     return new PipecatClient({
-      transport: new SmallWebRTCTransport({ iceServers }),
+      transport: new SmallWebRTCTransport({
+        iceServers,
+        ...(deployment.cpu_only ? { mediaManager: new WavMediaManager() } : {}),
+      }),
       enableMic: true,
     });
-  }, [iceServers, iceServersLoaded, selectedTransport]);
+  }, [deployment, iceServers, iceServersLoaded, selectedTransport]);
 
   if (!client) {
     return <div className="h-screen d-flex items-center justify-center">Loading connection...</div>;

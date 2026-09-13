@@ -1,3 +1,5 @@
+/prompt.md
+/cpu-voice-bot.code-workspace
 .idea/
 .direnv/
 .ruff_cache/
@@ -66,3 +68,6 @@ docs/how-to/evaluate-thinker-talker-airline.md
 eval/
 tests/test_voice_agent_eval.py
 .ipynb_checkpoints/
+
+.models/
+.build/

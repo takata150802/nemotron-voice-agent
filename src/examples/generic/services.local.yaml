@@ -139,3 +139,22 @@ jetson:
       server: "nemotron-speech:50051"
       model: "parakeet-ctc-1.1b-asr"
       function_id: ""
+
+cpu:
+  llm:
+    gpt-oss-20b:
+      name: Local gpt-oss-20b Q4_K_M (CPU)
+      model_id: gpt-oss-20b
+      base_url: http://127.0.0.1:8080/v1
+  asr:
+    nemo-speech-cpp:
+      name: NeMo-Speech.cpp Nemotron 3.5 (CPU)
+      server: ws://127.0.0.1:8081/v1/realtime
+      model: nemotron-3.5-asr-streaming-0.6b
+      language_code: ja-JP
+  tts:
+    voicevox:
+      name: Local Japanese VOICEVOX (CPU)
+      server: http://127.0.0.1:50021
+      voice_id: '3'
+      language_code: ja-JP

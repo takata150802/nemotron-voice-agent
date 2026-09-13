@@ -33,6 +33,12 @@ examples:
       llm: [nemotron-lightning]
       asr: [nemotron-asr-streaming-english]
       tts: [magpie-multilingual-tts]
+    platform_defaults:
+      cpu:
+        prompt: [cpu_japanese]
+        llm: [gpt-oss-20b]
+        asr: [nemo-speech-cpp]
+        tts: [voicevox]
     bot: examples.generic.pipeline:bot
 
   multilingual-assistant:

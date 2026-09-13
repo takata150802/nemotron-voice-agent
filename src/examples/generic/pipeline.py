@@ -71,113 +71,123 @@ async def bot(runner_args: RunnerArguments) -> None:
     default_tts = load_service_entry("tts", "")
     default_asr = load_service_entry("asr", "")
 
-    # --- ASR ---
-    asr_server = body.get("asr_server", "") or default_asr.get("server", "grpc.nvcf.nvidia.com:443")
-    asr_ssl = is_nvcf(asr_server)
-    asr_kwargs: dict = {
-        "api_key": os.getenv("NVIDIA_API_KEY"),
-        "server": asr_server,
-        "use_ssl": asr_ssl,
-    }
-    asr_function_id = body.get("asr_function_id", "") or default_asr.get("function_id", "")
-    asr_model = body.get("asr_model", "") or default_asr.get("model", "")
-    asr_language_code = body.get("asr_language_code", "") or default_asr.get("language_code", "")
-    if asr_function_id or asr_model:
-        asr_kwargs["model_function_map"] = {
-            "function_id": asr_function_id,
-            "model_name": asr_model or "custom-asr",
-        }
-    if asr_language_code:
-        asr_kwargs["settings"] = NvidiaSTTSettings(language=asr_language_code)
-    stt = NvidiaSTTService(**asr_kwargs, stop_history=400)
-    logger.info(
-        f"ASR: server={asr_server}, ssl={asr_ssl}, function_id={asr_function_id or '(default)'}, "
-        f"language={asr_language_code or '(default)'}"
-    )
+    from services.local_config import cpu_mode
 
-    # --- LLM ---
-    model_id = body.get("model_id", "") or default_llm.get("model_id", "nvidia/nemotron-3.5-lightning-30b-a3b")
-    base_url = body.get("base_url", "") or default_llm.get("base_url", "https://integrate.api.nvidia.com/v1")
-    system_prompt = body.get("system_prompt", "") or default_llm.get("system_prompt", "")
-    extra_params = parse_json_dict(
-        body.get("extra_params", "") or default_llm.get("extra_params", ""),
-        label="extra_params",
-    )
+    if cpu_mode():
+        from services.local_backends import create_local_services
 
-    logger.info(
-        f"LLM: model={model_id}, base_url={base_url}, "
-        f"system_prompt={'<' + system_prompt + '>' if system_prompt else '(none)'}, "
-        f"extra_params={extra_params or '(none)'}"
-    )
-
-    llm_settings = NvidiaLLMSettings(model=model_id)
-    if extra_params:
-        llm_settings.extra = extra_params
-    llm = NvidiaLLMService(
-        api_key=os.getenv("NVIDIA_API_KEY"),
-        base_url=base_url,
-        settings=llm_settings,
-    )
-
-    tools_available = resolve_tools_available(__file__, prompt_key)
-    tools_schema, registered_tools = build_tools_schema(__file__, tools_available)
-    tools_enabled = tools_schema is not None
-
-    if tools_enabled:
-        for name in registered_tools:
-            llm.register_function(name, TOOL_HANDLERS[name])
-            logger.info(f"Registered tool handler: {name}")
+        stt, llm, tts = create_local_services(voice=body.get("tts_voice_id"))
+        system_prompt = ""
+        tools_enabled = False
+        tools_schema = None
     else:
-        logger.info(f"Tool calling disabled for prompt_key={prompt_key!r} (no tools_available in prompts.yaml)")
-
-    # --- TTS ---
-    tts_server = body.get("tts_server", "") or default_tts.get("server", "grpc.nvcf.nvidia.com:443")
-    tts_ssl = is_nvcf(tts_server)
-    tts_voice = body.get("tts_voice_id", "") or default_tts.get("voice_id", "")
-    tts_synthesis_mode = body.get("tts_synthesis_mode", "")
-    raw_tts_function_id = body.get("tts_function_id")
-    tts_function_id = (
-        str(raw_tts_function_id) if raw_tts_function_id is not None else default_tts.get("function_id", "")
-    )
-    tts_model = body.get("tts_model", "") or default_tts.get("model", "")
-    tts_zero_shot_audio_prompt_file = body.get("tts_zero_shot_audio_prompt_file", "") or default_tts.get(
-        "zero_shot_audio_prompt_file", ""
-    )
-    tts_language_code = body.get("tts_language_code", "") or default_tts.get("language_code", "")
-    if tts_language_code:
-        tts_language_code = normalize_lang_code(tts_language_code)
-    custom_dictionary = load_ipa_dictionary()
-
-    tts_settings_kwargs: dict = {"voice": tts_voice}
-    if tts_synthesis_mode:
-        tts_settings_kwargs["synthesis_mode"] = tts_synthesis_mode
-    if tts_language_code:
-        tts_settings_kwargs["language"] = tts_language_code
-    tts_kwargs: dict = {
-        "api_key": os.getenv("NVIDIA_API_KEY"),
-        "server": tts_server,
-        "settings": NvidiaTTSSettings(**tts_settings_kwargs),
-        "use_ssl": tts_ssl,
-        "text_filters": [NemotronSpeechTextFilter()],
-        "custom_dictionary": custom_dictionary,
-    }
-    if tts_function_id or tts_model:
-        tts_kwargs["model_function_map"] = {
-            "function_id": tts_function_id,
-            "model_name": tts_model,
+        # --- ASR ---
+        asr_server = body.get("asr_server", "") or default_asr.get("server", "grpc.nvcf.nvidia.com:443")
+        asr_ssl = is_nvcf(asr_server)
+        asr_kwargs: dict = {
+            "api_key": os.getenv("NVIDIA_API_KEY"),
+            "server": asr_server,
+            "use_ssl": asr_ssl,
         }
-    if tts_zero_shot_audio_prompt_file:
-        tts_kwargs["zero_shot_audio_prompt_file"] = tts_zero_shot_audio_prompt_file
-    tts = NvidiaTTSService(**tts_kwargs)
+        asr_function_id = body.get("asr_function_id", "") or default_asr.get("function_id", "")
+        asr_model = body.get("asr_model", "") or default_asr.get("model", "")
+        asr_language_code = body.get("asr_language_code", "") or default_asr.get("language_code", "")
+        if asr_function_id or asr_model:
+            asr_kwargs["model_function_map"] = {
+                "function_id": asr_function_id,
+                "model_name": asr_model or "custom-asr",
+            }
+        if asr_language_code:
+            asr_kwargs["settings"] = NvidiaSTTSettings(language=asr_language_code)
+        stt = NvidiaSTTService(**asr_kwargs, stop_history=400)
+        logger.info(
+            f"ASR: server={asr_server}, ssl={asr_ssl}, function_id={asr_function_id or '(default)'}, "
+            f"language={asr_language_code or '(default)'}"
+        )
 
-    logger.info(
-        f"TTS: server={tts_server}, ssl={tts_ssl}, voice={tts_voice}, "
-        f"model={tts_model or '(pipecat default)'}, function_id={tts_function_id or '(pipecat default)'}, "
-        f"synthesis_mode={tts_synthesis_mode or '(pipecat default)'}, "
-        f"language={tts_language_code or '(pipecat default)'}, "
-        f"zero_shot_audio_prompt_file={tts_zero_shot_audio_prompt_file or '(none)'}, "
-        f"text_filters=[NemotronSpeechTextFilter]"
-    )
+        # --- LLM ---
+        model_id = body.get("model_id", "") or default_llm.get("model_id", "nvidia/nemotron-3.5-lightning-30b-a3b")
+        base_url = body.get("base_url", "") or default_llm.get("base_url", "https://integrate.api.nvidia.com/v1")
+        system_prompt = body.get("system_prompt", "") or default_llm.get("system_prompt", "")
+        extra_params = parse_json_dict(
+            body.get("extra_params", "") or default_llm.get("extra_params", ""),
+            label="extra_params",
+        )
+
+        logger.info(
+            f"LLM: model={model_id}, base_url={base_url}, "
+            f"system_prompt={'<' + system_prompt + '>' if system_prompt else '(none)'}, "
+            f"extra_params={extra_params or '(none)'}"
+        )
+
+        llm_settings = NvidiaLLMSettings(model=model_id)
+        if extra_params:
+            llm_settings.extra = extra_params
+        llm = NvidiaLLMService(
+            api_key=os.getenv("NVIDIA_API_KEY"),
+            base_url=base_url,
+            settings=llm_settings,
+        )
+
+        tools_available = resolve_tools_available(__file__, prompt_key)
+        tools_schema, registered_tools = build_tools_schema(__file__, tools_available)
+        tools_enabled = tools_schema is not None
+
+        if tools_enabled:
+            for name in registered_tools:
+                llm.register_function(name, TOOL_HANDLERS[name])
+                logger.info(f"Registered tool handler: {name}")
+        else:
+            logger.info(f"Tool calling disabled for prompt_key={prompt_key!r} (no tools_available in prompts.yaml)")
+
+        # --- TTS ---
+        tts_server = body.get("tts_server", "") or default_tts.get("server", "grpc.nvcf.nvidia.com:443")
+        tts_ssl = is_nvcf(tts_server)
+        tts_voice = body.get("tts_voice_id", "") or default_tts.get("voice_id", "")
+        tts_synthesis_mode = body.get("tts_synthesis_mode", "")
+        raw_tts_function_id = body.get("tts_function_id")
+        tts_function_id = (
+            str(raw_tts_function_id) if raw_tts_function_id is not None else default_tts.get("function_id", "")
+        )
+        tts_model = body.get("tts_model", "") or default_tts.get("model", "")
+        tts_zero_shot_audio_prompt_file = body.get("tts_zero_shot_audio_prompt_file", "") or default_tts.get(
+            "zero_shot_audio_prompt_file", ""
+        )
+        tts_language_code = body.get("tts_language_code", "") or default_tts.get("language_code", "")
+        if tts_language_code:
+            tts_language_code = normalize_lang_code(tts_language_code)
+        custom_dictionary = load_ipa_dictionary()
+
+        tts_settings_kwargs: dict = {"voice": tts_voice}
+        if tts_synthesis_mode:
+            tts_settings_kwargs["synthesis_mode"] = tts_synthesis_mode
+        if tts_language_code:
+            tts_settings_kwargs["language"] = tts_language_code
+        tts_kwargs: dict = {
+            "api_key": os.getenv("NVIDIA_API_KEY"),
+            "server": tts_server,
+            "settings": NvidiaTTSSettings(**tts_settings_kwargs),
+            "use_ssl": tts_ssl,
+            "text_filters": [NemotronSpeechTextFilter()],
+            "custom_dictionary": custom_dictionary,
+        }
+        if tts_function_id or tts_model:
+            tts_kwargs["model_function_map"] = {
+                "function_id": tts_function_id,
+                "model_name": tts_model,
+            }
+        if tts_zero_shot_audio_prompt_file:
+            tts_kwargs["zero_shot_audio_prompt_file"] = tts_zero_shot_audio_prompt_file
+        tts = NvidiaTTSService(**tts_kwargs)
+
+        logger.info(
+            f"TTS: server={tts_server}, ssl={tts_ssl}, voice={tts_voice}, "
+            f"model={tts_model or '(pipecat default)'}, function_id={tts_function_id or '(pipecat default)'}, "
+            f"synthesis_mode={tts_synthesis_mode or '(pipecat default)'}, "
+            f"language={tts_language_code or '(pipecat default)'}, "
+            f"zero_shot_audio_prompt_file={tts_zero_shot_audio_prompt_file or '(none)'}, "
+            f"text_filters=[NemotronSpeechTextFilter]"
+        )
 
     # --- Context ---
     messages = build_context_messages(base_system_content, system_prompt)
@@ -335,7 +345,7 @@ async def bot(runner_args: RunnerArguments) -> None:
             settings_kwargs["language"] = normalize_lang_code(language)
         await task.queue_frame(
             TTSUpdateSettingsFrame(
-                delta=NvidiaTTSSettings(**settings_kwargs),
+                delta=tts.Settings(**settings_kwargs),
                 service=tts,
             )
         )

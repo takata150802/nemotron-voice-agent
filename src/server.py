@@ -35,6 +35,10 @@ from utils import parse_env_bool, parse_env_int
 
 load_dotenv(override=True)
 
+from services.offline import prepare_cpu_runtime
+
+prepare_cpu_runtime()
+
 import argparse
 import asyncio
 import contextlib
@@ -197,6 +201,7 @@ def _deployment_response(active: dict, options: list[dict]) -> dict:
     active_deployment.setdefault("capabilities", [])
     transports = set(examples_registry.visible_transports())
     return {
+        **({"cpu_only": True} if os.getenv("PLATFORM", "").lower() == "cpu" else {}),
         "active": active_deployment,
         "selectable": not examples_registry.is_locked(),
         "options": options,
@@ -604,6 +609,13 @@ async def _ensure_tts_ready_for_connection(config: dict, example: dict) -> None:
 
 async def _ensure_services_ready_for_connection(config: dict, example: dict) -> None:
     """Verify selected services before the UI starts a session."""
+    from services.local_config import cpu_mode
+
+    if cpu_mode():
+        from services.health import check_services
+
+        await check_services()
+        return
     await _ensure_llm_ready_for_connection(config, example)
     await _ensure_asr_ready_for_connection(config, example)
     await _ensure_tts_ready_for_connection(config, example)
@@ -969,6 +981,12 @@ def create_app(host: str = "localhost", prompt_file: str = "") -> FastAPI:
         asr_function_id: str = Query(default=""),
     ):
         _bind_example_context_by_key(pipeline_mode or fallback_example_key)
+        from services.local_config import cpu_mode
+
+        if cpu_mode():
+            from services.voicevox_catalog import voice_catalog
+
+            return await voice_catalog()
         if asr_server or asr_model or asr_function_id:
             default_asr_server, default_asr_model, default_asr_function_id = _get_default_asr_catalog()
             if llm_id.startswith("custom-"):
@@ -1032,7 +1050,9 @@ def create_app(host: str = "localhost", prompt_file: str = "") -> FastAPI:
         Empty list when TURN is not configured (client falls back to host-only
         candidates, which is fine for local/LAN deployments).
         """
-        return {"iceServers": _build_ice_servers(request)}
+        from services.local_config import cpu_mode
+
+        return {"iceServers": [] if cpu_mode() else _build_ice_servers(request)}
 
     # ---- Static client UI ----
 

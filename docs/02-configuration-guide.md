@@ -2,6 +2,10 @@
 
 This is the index of everything you can configure in the Nemotron Voice Agent. Configuration lives in a small set of example-local files plus root `.env` settings, and the sections below index each area. For how the catalog files (`services.cloud.yaml` / `services.local.yaml`) work, see [Configure Services](how-to/configure-services.md).
 
+## CPU Local Fork
+
+For the CPU-only Japanese fork, refer to the [CPU local setup guide](how-to/cpu-local.md) and [architecture research](cpu-research.md). The original cloud and GPU catalogs below describe upstream deployment profiles.
+
 ## Model Service
 
 What ASR / LLM / TTS models are available, their VRAM, precision, and known issues:

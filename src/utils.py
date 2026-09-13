@@ -378,6 +378,10 @@ def _first_reachable_variant(variants: list[tuple[str, dict]]) -> tuple[str, dic
 
 def _load_cloud_services_catalog() -> dict:
     """Load cloud service entries from ``services.cloud.yaml``."""
+    from services.local_config import cpu_mode
+
+    if cpu_mode():
+        return {}
     return _normalize_services_catalog(load_yaml_file(_services_cloud_path()))
 
 
@@ -391,7 +395,9 @@ def _load_local_services_catalog() -> dict:
         return _normalize_services_catalog({})
     platform_data = select_runtime_platform_catalog(data)
     if platform_data is not None:
-        return _rewrite_local_runtime_endpoints(_normalize_services_catalog(platform_data))
+        from services.local_config import configure_cpu_catalog
+
+        return configure_cpu_catalog(_rewrite_local_runtime_endpoints(_normalize_services_catalog(platform_data)))
 
     variants: dict[str, dict[str, list[tuple[str, dict]]]] = {}
     for platform_name, platform_data in data.items():
