@@ -4,6 +4,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { RTVIEvent } from "@pipecat-ai/client-js";
 import { VoiceVisualizer, usePipecatClientMediaTrack, useRTVIClientEvent } from "@pipecat-ai/client-react";
+import { resolveCssColor } from "../utils";
 
 type ParticipantType = "local" | "bot";
 
@@ -108,8 +109,8 @@ export function VoiceLevelVisualizer({
     return (
       <VoiceVisualizer
         participantType={participantType}
-        backgroundColor={backgroundColor}
-        barColor={barColor}
+        backgroundColor={resolveCssColor(backgroundColor)}
+        barColor={resolveCssColor(barColor)}
         barCount={barCount}
         barGap={barGap}
         barLineCap={barLineCap}

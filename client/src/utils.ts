@@ -64,3 +64,10 @@ export function numberField(record: Record<string, unknown>, key: string): numbe
 export function isSelectablePrompt(prompt: { selectable?: boolean; scope?: string }): boolean {
   return prompt.selectable !== false && prompt.scope !== "agent";
 }
+
+export function resolveCssColor(color: string): string {
+  const variableMatch = color.match(/^var\((--[^,)]+)(?:,[^)]+)?\)$/);
+  if (!variableMatch || typeof document === "undefined") return color;
+
+  return getComputedStyle(document.documentElement).getPropertyValue(variableMatch[1]).trim() || color;
+}

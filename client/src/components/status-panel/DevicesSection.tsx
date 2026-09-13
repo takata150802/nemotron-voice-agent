@@ -7,6 +7,7 @@ import {
   usePipecatClientMediaDevices,
   VoiceVisualizer
 } from "@pipecat-ai/client-react";
+import { resolveCssColor } from "../../utils";
 
 export function DevicesSection() {
   const { enableMic, isMicEnabled } = usePipecatClientMicControl();
@@ -47,7 +48,7 @@ export function DevicesSection() {
             <VoiceVisualizer
               participantType="local"
               backgroundColor="transparent"
-              barColor={isMicEnabled ? "var(--accent-primary)" : "var(--text-muted)"}
+              barColor={resolveCssColor(isMicEnabled ? "var(--accent-primary)" : "var(--text-muted)")}
               barCount={16}
               barGap={3}
               barWidth={4}
