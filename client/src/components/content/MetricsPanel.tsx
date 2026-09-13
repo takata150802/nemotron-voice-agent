@@ -70,7 +70,7 @@ interface DetailColumn {
 
 const ALL_BOARD_FILTER = "all";
 
-const TURN_COLORS = ["#23331b", "#1f3038", "#332b1b", "#2f2438", "#1f352f", "#3a2626", "#292f3a", "#34341f"];
+const TURN_COLORS = ["#fff0f1", "#f8f8f8", "#ffe5e8", "#f0f0f0", "#fff5f6", "#eaeaea", "#ffdadd", "#fdfdfd"];
 
 const SUMMARY_BASE_COLUMNS = [
   { id: "summary:ordinal", label: "#" },

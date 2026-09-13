@@ -2,6 +2,8 @@
 
 [NVIDIA Nemotron Voice Agent](https://github.com/NVIDIA-AI-Blueprints/nemotron-voice-agent) の Pipecat pipeline とブラウザクライアントを再利用する CPU-only fork です。Ubuntu サーバ上の NeMo-Speech.cpp、llama.cpp、VOICEVOX ENGINE を接続し、Windows の Chrome / Edge から WebRTC で日本語音声対話を行います。
 
+ブラウザ UI は白背景・黒文字を基本に、赤 `#e60012` をアクセントカラーとして使用します。
+
 内部推論サービスはループバックに限定します。CPU 構成にクラウド API キーは不要です。モデルとソフトウェアの事前取得にはインターネットを使用できます。
 
 ```text

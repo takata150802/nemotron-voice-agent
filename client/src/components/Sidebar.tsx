@@ -11,8 +11,8 @@ import { VoiceLevelVisualizer } from "./VoiceLevelVisualizer";
 import { WebcamVisionPanel } from "./WebcamVisionPanel";
 
 const VISUALIZER_PROPS = {
-  backgroundColor: "#0a0a0a",
-  barColor: "#76b900",
+  backgroundColor: "var(--bg-secondary)",
+  barColor: "var(--accent-primary)",
   barCount: 20,
   barGap: 4,
   barWidth: 8,

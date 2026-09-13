@@ -239,7 +239,7 @@ export function Header() {
     <header className="px-4 py-3 border-b">
       <div className="d-flex justify-between items-center">
         <h1 className="text-lg font-semibold">
-          <span style={{ color: "#76b900", fontWeight: 700, letterSpacing: "0.08em" }}>Nemotron</span> Voice Agent
+          <span style={{ color: "var(--accent-primary)", fontWeight: 700, letterSpacing: "0.08em" }}>CPU</span> Voice Bot
         </h1>
         <div className="d-flex items-center gap-3">
           {isConnected && <DevicesSection />}
@@ -253,7 +253,7 @@ export function Header() {
         </div>
       </div>
       {connectionError && (
-        <p className="mt-2 text-xs" style={{ color: "#f87171" }}>
+        <p className="mt-2 text-xs" style={{ color: "var(--accent-dark)" }}>
           {connectionError}
         </p>
       )}

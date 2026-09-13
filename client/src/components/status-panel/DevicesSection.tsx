@@ -47,7 +47,7 @@ export function DevicesSection() {
             <VoiceVisualizer
               participantType="local"
               backgroundColor="transparent"
-              barColor={isMicEnabled ? "#76b900" : "#666666"}
+              barColor={isMicEnabled ? "var(--accent-primary)" : "var(--text-muted)"}
               barCount={16}
               barGap={3}
               barWidth={4}

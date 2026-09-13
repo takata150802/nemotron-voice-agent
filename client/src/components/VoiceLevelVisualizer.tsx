@@ -35,8 +35,8 @@ function normalizeRemoteAudioLevel(level: number) {
 
 function AudioLevelBars({
   ariaLabel,
-  backgroundColor = "#0a0a0a",
-  barColor = "#76b900",
+  backgroundColor = "var(--bg-secondary)",
+  barColor = "var(--accent-primary)",
   barCount = 20,
   barGap = 4,
   barLineCap = "round",
@@ -79,8 +79,8 @@ function AudioLevelBars({
 export function VoiceLevelVisualizer({
   participantType,
   ariaLabel,
-  backgroundColor = "#0a0a0a",
-  barColor = "#76b900",
+  backgroundColor = "var(--bg-secondary)",
+  barColor = "var(--accent-primary)",
   barCount = 20,
   barGap = 4,
   barLineCap = "round",

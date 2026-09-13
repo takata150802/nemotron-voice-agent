@@ -2,37 +2,43 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 // ==========================================
-// NVIDIA Theme - Utility Classes
-// Based on build.nvidia.com design system
+// Light Theme - Utility Classes
+// Retains the upstream design tokens and component structure
 // ==========================================
 
 // ------------------------------------------
 // CSS Variables (Design Tokens)
 // ------------------------------------------
 :root {
+  color-scheme: light;
+
   // Colors - Primary
-  --nvidia-green: #76b900;
-  --nvidia-green-hover: #8ed100;
-  --nvidia-green-dark: #5a8f00;
+  --accent-primary: #e60012;
+  --accent-hover: #cc0010;
+  --accent-dark: #b3000e;
+  // Compatibility aliases for upstream components.
+  --nvidia-green: var(--accent-primary);
+  --nvidia-green-hover: var(--accent-hover);
+  --nvidia-green-dark: var(--accent-dark);
 
   // Colors - Backgrounds
-  --bg-primary: #000000;
-  --bg-secondary: #0a0a0a;
-  --bg-tertiary: #121212;
-  --bg-card: #1a1a1a;
-  --bg-card-hover: #222222;
-  --bg-elevated: #252525;
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f5f5f5;
+  --bg-elevated: #f0f0f0;
 
   // Colors - Text
-  --text-primary: #ffffff;
-  --text-secondary: #a0a0a0;
+  --text-primary: #000000;
+  --text-secondary: #333333;
   --text-muted: #666666;
   --text-accent: var(--nvidia-green);
 
   // Colors - Borders
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-default: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.2);
   --border-accent: var(--nvidia-green);
 
   // Typography - Font Family
@@ -76,10 +82,10 @@
   --radius-full: 9999px;
 
   // Shadows
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(118, 185, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(230, 0, 18, 0.3);
 
   // Transitions
   --transition-fast: 150ms ease;
@@ -97,7 +103,7 @@
 }
 
 @mixin card-base {
-  background: rgba(30, 30, 30, 0.4);
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   transition: border-color var(--transition-fast), background var(--transition-fast);
@@ -105,7 +111,7 @@
 
 @mixin card-active {
   border-color: var(--nvidia-green);
-  background: rgba(118, 185, 0, 0.08);
+  background: rgba(230, 0, 18, 0.08);
 }
 
 @mixin active-badge {
@@ -540,7 +546,7 @@ body {
 
   &:focus {
     border-color: var(--nvidia-green);
-    box-shadow: 0 0 0 2px rgba(118, 185, 0, 0.2);
+    box-shadow: 0 0 0 2px rgba(230, 0, 18, 0.2);
   }
 }
 
@@ -562,7 +568,7 @@ body {
 
 .badge-accent {
   @extend %badge-base;
-  background-color: rgba(118, 185, 0, 0.15);
+  background-color: rgba(230, 0, 18, 0.15);
   color: var(--nvidia-green);
 }
 
@@ -608,7 +614,7 @@ body {
 }
 
 .message-bot {
-  background-color: rgba(118, 185, 0, 0.1);
+  background-color: rgba(230, 0, 18, 0.1);
   border-left: 3px solid var(--nvidia-green);
 }
 
@@ -624,7 +630,7 @@ body {
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  background-color: rgba(30, 30, 30, 0.4);
+  background-color: var(--bg-card);
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
@@ -642,15 +648,15 @@ body {
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid rgba(118, 185, 0, 0.35);
+  border: 1px solid rgba(230, 0, 18, 0.35);
   border-radius: var(--radius-full);
-  background: linear-gradient(180deg, rgba(118, 185, 0, 0.16), rgba(30, 30, 30, 0.55));
+  background: linear-gradient(180deg, rgba(230, 0, 18, 0.16), rgba(255, 255, 255, 0.9));
   color: var(--nvidia-green);
-  box-shadow: 0 0 0 1px rgba(118, 185, 0, 0.08);
+  box-shadow: 0 0 0 1px rgba(230, 0, 18, 0.08);
 
   &:hover:not(:disabled) {
     border-color: var(--nvidia-green);
-    background: rgba(118, 185, 0, 0.18);
+    background: rgba(230, 0, 18, 0.18);
     color: var(--nvidia-green-hover);
     box-shadow: var(--shadow-glow);
   }
@@ -701,7 +707,7 @@ body {
   overflow: hidden;
   min-height: 48px;
   border-radius: var(--radius-sm);
-  background: #0a0a0a;
+  background: var(--bg-secondary);
 }
 
 .sidebar-voice-visualizer canvas {
@@ -723,7 +729,7 @@ body {
   width: 8px;
   min-height: 4px;
   border-radius: 999px;
-  background: #76b900;
+  background: var(--accent-primary);
   transition: height 80ms ease-out;
 }
 
@@ -740,7 +746,7 @@ body {
 .webcam-control-off {
   .webcam-icon-button {
     border-color: rgba(160, 160, 160, 0.25);
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.04);
     color: var(--text-muted);
     box-shadow: none;
   }
@@ -760,15 +766,15 @@ body {
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid rgba(118, 185, 0, 0.35);
+  border: 1px solid rgba(230, 0, 18, 0.35);
   border-radius: var(--radius-full);
-  background: linear-gradient(180deg, rgba(118, 185, 0, 0.16), rgba(30, 30, 30, 0.55));
+  background: linear-gradient(180deg, rgba(230, 0, 18, 0.16), rgba(255, 255, 255, 0.9));
   color: var(--nvidia-green);
-  box-shadow: 0 0 0 1px rgba(118, 185, 0, 0.08);
+  box-shadow: 0 0 0 1px rgba(230, 0, 18, 0.08);
 
   &:hover:not(:disabled) {
     border-color: var(--nvidia-green);
-    background: rgba(118, 185, 0, 0.18);
+    background: rgba(230, 0, 18, 0.18);
     color: var(--nvidia-green-hover);
     box-shadow: var(--shadow-glow);
   }
@@ -816,7 +822,7 @@ body {
 }
 
 .webcam-error {
-  color: #ff9b9b !important;
+  color: var(--accent-dark) !important;
   white-space: normal !important;
 }
 
@@ -835,9 +841,9 @@ body {
 }
 
 @keyframes webcam-status-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(118, 185, 0, 0.45); }
-  70% { box-shadow: 0 0 0 6px rgba(118, 185, 0, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(118, 185, 0, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(230, 0, 18, 0.45); }
+  70% { box-shadow: 0 0 0 6px rgba(230, 0, 18, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(230, 0, 18, 0); }
 }
 
 .webcam-chunk-control {
@@ -883,7 +889,7 @@ body {
 .webcam-chunk-control select:focus-visible {
   outline: none;
   border-color: var(--nvidia-green);
-  box-shadow: 0 0 0 2px rgba(118, 185, 0, 0.25);
+  box-shadow: 0 0 0 2px rgba(230, 0, 18, 0.25);
 }
 
 .webcam-chunk-control select option {
@@ -920,7 +926,7 @@ body {
   font-weight: 600;
   color: #fff;
   background: rgba(0, 0, 0, 0.62);
-  border: 2px solid rgba(118, 185, 0, 0.85);
+  border: 2px solid rgba(230, 0, 18, 0.85);
   border-radius: var(--radius-md);
 }
 
@@ -930,7 +936,7 @@ body {
   flex: none;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: rgba(118, 185, 0, 1);
+  border-top-color: rgba(230, 0, 18, 1);
   animation: spin 0.8s linear infinite;
 }
 
@@ -939,9 +945,9 @@ body {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2);
-  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border: 1px dashed rgba(0, 0, 0, 0.16);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(0, 0, 0, 0.035);
 }
 
 .webcam-off-state strong {
@@ -960,16 +966,16 @@ body {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2);
-  border: 1px solid rgba(118, 185, 0, 0.25);
+  border: 1px solid rgba(230, 0, 18, 0.25);
   border-radius: var(--radius-md);
-  background: rgba(118, 185, 0, 0.08);
+  background: rgba(230, 0, 18, 0.08);
   max-height: 160px;
   overflow: auto;
 }
 
 .webcam-agent-update-stale {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.045);
 
   .webcam-agent-update-header strong,
   p {
@@ -1012,7 +1018,7 @@ body {
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.04);
 
   small {
     flex: 1;
@@ -1058,7 +1064,7 @@ body {
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .webcam-visual-control span {
@@ -1085,8 +1091,8 @@ body {
 }
 
 .webcam-visual-control-continue {
-  border-color: rgba(118, 185, 0, 0.35);
-  background: rgba(118, 185, 0, 0.1);
+  border-color: rgba(230, 0, 18, 0.35);
+  background: rgba(230, 0, 18, 0.1);
 }
 
 .attachment-preview {
@@ -1149,7 +1155,7 @@ body {
 }
 
 .agent-task-card-done .agent-task-status {
-  background-color: rgba(118, 185, 0, 0.15);
+  background-color: rgba(230, 0, 18, 0.15);
   color: var(--nvidia-green);
 }
 
@@ -1162,7 +1168,7 @@ body {
 }
 
 .attachment-preview small {
-  color: #ff9b9b;
+  color: var(--accent-dark);
 }
 
 .attachment-preview-uploading small {
@@ -1189,14 +1195,14 @@ body {
 }
 
 .agent-task-indicator-running {
-  border: 2px solid rgba(118, 185, 0, 0.25);
+  border: 2px solid rgba(230, 0, 18, 0.25);
   border-top-color: var(--nvidia-green);
   animation: task-running-spin 0.8s linear infinite;
 }
 
 .agent-task-indicator-done {
   background: var(--nvidia-green);
-  box-shadow: 0 0 10px rgba(118, 185, 0, 0.45);
+  box-shadow: 0 0 10px rgba(230, 0, 18, 0.45);
 }
 
 .agent-task-indicator-done::after {
@@ -1432,7 +1438,7 @@ body {
   color: var(--text-muted);
 
   .tools-row.is-active & {
-    color: #76b900;
+    color: var(--accent-primary);
   }
 }
 
@@ -1700,7 +1706,7 @@ body {
   }
 
   &:hover { background: var(--bg-card-hover); }
-  &.selected { background: rgba(118, 185, 0, 0.1); }
+  &.selected { background: rgba(230, 0, 18, 0.1); }
 }
 
 .header-devices {
@@ -1716,7 +1722,7 @@ body {
   z-index: 100;
   min-width: 260px;
   margin-top: var(--space-1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 // Tabs
@@ -1852,7 +1858,7 @@ body {
   background: var(--nvidia-green);
   border: 1px solid var(--nvidia-green);
   border-radius: var(--radius-sm);
-  color: #000;
+  color: var(--bg-primary);
   font-size: var(--text-base);
   font-weight: var(--font-bold);
   cursor: pointer;
@@ -1949,7 +1955,7 @@ body {
   }
 
   &.active {
-    background: rgba(118, 185, 0, 0.16);
+    background: rgba(230, 0, 18, 0.16);
     border-color: var(--nvidia-green);
     color: var(--text-primary);
   }
@@ -2075,7 +2081,7 @@ body {
     &:hover { background: var(--bg-card); border-color: var(--border-subtle); }
     &.transport-btn--active {
       opacity: 0.8;
-      &:hover { background: rgba(118, 185, 0, 0.08); border-color: var(--nvidia-green); }
+      &:hover { background: rgba(230, 0, 18, 0.08); border-color: var(--nvidia-green); }
     }
   }
 }
@@ -2112,7 +2118,7 @@ body {
 
   &--active {
     border-color: var(--nvidia-green);
-    background: rgba(118, 185, 0, 0.08);
+    background: rgba(230, 0, 18, 0.08);
     color: var(--text-primary);
 
     .model-card__tag {
@@ -2126,7 +2132,7 @@ body {
     &:hover { background: var(--bg-card); border-color: var(--border-subtle); }
     &.model-card--active {
       opacity: 0.8;
-      &:hover { background: rgba(118, 185, 0, 0.08); border-color: var(--nvidia-green); }
+      &:hover { background: rgba(230, 0, 18, 0.08); border-color: var(--nvidia-green); }
     }
   }
 }
@@ -2163,7 +2169,7 @@ body {
   font-family: var(--font-sans);
   color: var(--text-primary);
   background-color: var(--bg-card);
-  border: 1px solid rgba(118, 185, 0, 0.35);
+  border: 1px solid rgba(230, 0, 18, 0.35);
   border-radius: var(--radius-sm);
   outline: none;
   cursor: pointer;
@@ -2290,7 +2296,7 @@ body {
   padding: var(--space-3);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  background: rgba(30, 30, 30, 0.6);
+  background: var(--bg-secondary);
 }
 
 .svc-input {
@@ -2298,7 +2304,7 @@ body {
   padding: 8px 10px;
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
-  background: rgba(20, 20, 20, 0.8);
+  background: var(--bg-card);
   color: var(--text-primary);
   font-size: var(--text-sm);
   outline: none;
@@ -2346,12 +2352,12 @@ body {
 
   &--clickable {
     cursor: pointer;
-    &:hover { background: rgba(255, 255, 255, 0.03); border-color: var(--border-default); }
+    &:hover { background: rgba(0, 0, 0, 0.03); border-color: var(--border-default); }
   }
 
   &--active {
     @include card-active;
-    &:hover { background: rgba(118, 185, 0, 0.1); border-color: var(--nvidia-green); }
+    &:hover { background: rgba(230, 0, 18, 0.1); border-color: var(--nvidia-green); }
   }
 
   &--disabled {
@@ -2508,7 +2514,7 @@ body {
     font-size: 11px;
     line-height: 1.45;
     color: var(--text-secondary);
-    background: rgba(20, 20, 20, 0.6);
+    background: var(--bg-tertiary);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     padding: 8px 10px;
@@ -2548,7 +2554,7 @@ body {
   &__icon {
     flex-shrink: 0;
     margin-bottom: 16px;
-    filter: drop-shadow(0 0 20px rgba(118, 185, 0, 0.15));
+    filter: drop-shadow(0 0 20px rgba(230, 0, 18, 0.15));
   }
 
   &__text {
@@ -2579,7 +2585,7 @@ body {
     color: var(--nvidia-green);
     font-weight: 600;
     padding: 2px 10px;
-    background: rgba(118, 185, 0, 0.1);
+    background: rgba(230, 0, 18, 0.1);
     border-radius: 4px;
     font-size: 0.95rem;
   }
