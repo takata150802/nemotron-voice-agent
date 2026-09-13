@@ -1,0 +1,75 @@
+x-cpu: &cpu
+  profiles: [generic-assistant/cpu]
+  network_mode: host
+  pull_policy: never
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: {max-size: 10m, max-file: "3"}
+x-health: &health
+  interval: 10s
+  timeout: 5s
+  retries: 30
+  start_period: 120s
+services:
+  cpu-asr:
+    <<: *cpu
+    image: cpu-voice-bot/asr:${CPU_IMAGE_VERSION:-local}-${CPU_ARCH:-amd64}
+    environment:
+      NEMO_SPEECH_URL: ${NEMO_SPEECH_URL:-ws://127.0.0.1:8081/v1/realtime}
+      NEMO_ASR_MODEL: /models/${NEMO_ASR_MODEL_FILE:-nemotron-3.5-asr-streaming-0.6b.q8_0.gguf}
+      NEMO_ASR_THREADS: ${NEMO_ASR_THREADS:-2}
+      NEMO_HTTP_THREADS: ${NEMO_HTTP_THREADS:-4}
+    volumes: ["${CPU_MODELS_DIR:-/srv/cpu-voice-bot/models}:/models:ro"]
+    healthcheck:
+      <<: *health
+      test: [CMD-SHELL, "base=$${NEMO_SPEECH_URL#ws://}; base=$${base%%/*}; curl -fsS http://$$base/health && curl -fsS http://$$base/ready"]
+  cpu-llm:
+    <<: *cpu
+    image: cpu-voice-bot/llm:${CPU_IMAGE_VERSION:-local}-${CPU_ARCH:-amd64}
+    environment:
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://127.0.0.1:8080/v1}
+      LLM_MODEL_PATH: /models/${LLM_MODEL_FILE:-gpt-oss-20b-Q4_K_M.gguf}
+      LLAMA_THREADS: ${LLAMA_THREADS:-4}
+      LLAMA_THREADS_BATCH: ${LLAMA_THREADS_BATCH:-4}
+      LLAMA_CTX_SIZE: ${LLAMA_CTX_SIZE:-4096}
+    volumes: ["${CPU_MODELS_DIR:-/srv/cpu-voice-bot/models}:/models:ro"]
+    healthcheck:
+      <<: *health
+      test: [CMD-SHELL, "base=$${LLM_BASE_URL%/}; curl -fsS $${base%/v1}/health"]
+  cpu-tts:
+    <<: *cpu
+    image: cpu-voice-bot/tts:${CPU_IMAGE_VERSION:-local}-${CPU_ARCH:-amd64}
+    environment:
+      TTS_BASE_URL: ${TTS_BASE_URL:-http://127.0.0.1:50021}
+      TTS_THREADS: ${TTS_THREADS:-2}
+    volumes: [cpu-voicevox-data:/data]
+    healthcheck:
+      <<: *health
+      test: [CMD-SHELL, "base=$${TTS_BASE_URL%/}; curl -fsS $$base/version"]
+  cpu-app:
+    <<: *cpu
+    image: cpu-voice-bot/app:${CPU_IMAGE_VERSION:-local}-${CPU_ARCH:-amd64}
+    environment:
+      NEMO_SPEECH_URL: ${NEMO_SPEECH_URL:-ws://127.0.0.1:8081/v1/realtime}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://127.0.0.1:8080/v1}
+      TTS_BASE_URL: ${TTS_BASE_URL:-http://127.0.0.1:50021}
+      PLATFORM: cpu
+      PIPELINE_TLS: "true"
+      VOICE_AGENT_HOST: ${VOICE_AGENT_HOST:-0.0.0.0}
+      VOICE_AGENT_PORT: ${VOICE_AGENT_PORT:-7860}
+      VOICE_AGENT_TLS_CERT: /tls/server.crt
+      VOICE_AGENT_TLS_KEY: /tls/server.key
+      TTS_VOICE_ID: ${TTS_VOICE_ID:-3}
+    volumes:
+      - ${VOICE_AGENT_TLS_CERT:-/srv/cpu-voice-bot/tls/server.crt}:/tls/server.crt:ro
+      - ${VOICE_AGENT_TLS_KEY:-/srv/cpu-voice-bot/tls/server.key}:/tls/server.key:ro
+    depends_on:
+      cpu-asr: {condition: service_healthy}
+      cpu-llm: {condition: service_healthy}
+      cpu-tts: {condition: service_healthy}
+    healthcheck:
+      <<: *health
+      test: [CMD-SHELL, "curl -fk https://127.0.0.1:$${VOICE_AGENT_PORT}/health"]
+volumes:
+  cpu-voicevox-data:

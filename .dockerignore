@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+.models
+.build
+.venv
+.certs
+**/node_modules
+**/dist
+**/__pycache__
+*.tar
+*.tar.gz

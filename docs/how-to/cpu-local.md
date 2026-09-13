@@ -1,5 +1,7 @@
 # CPU ローカル構成ガイド
 
+Docker 配布と更新の手順は、[CPU Docker デプロイ](cpu-docker.md) を参照してください。
+
 ## アーキテクチャと変更方針
 
 この fork は Ubuntu 24.04.1 LTS、x86_64、Intel Core i7-10700KF を対象にします。GPU と CUDA は推論に使用しません。Windows はブラウザだけを使用します。

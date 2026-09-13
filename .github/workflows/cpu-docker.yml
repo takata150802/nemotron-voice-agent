@@ -1,0 +1,50 @@
+name: CPU Docker images
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - docker/Dockerfile.cpu
+      - docker/docker-compose.cpu.yaml
+      - scripts/*cpu*.sh
+      - scripts/run_*.sh
+      - scripts/local_common.sh
+      - scripts/setup_tokenizer.py
+      - src/services/**
+      - src/server.py
+      - src/examples/generic/pipeline.py
+      - pyproject.toml
+      - uv.lock
+      - client/**
+      - patches/nemo-cpu*.patch
+      - .github/workflows/cpu-docker.yml
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build native CPU images
+        env:
+          BUILD_JOBS: "2"
+        run: bash scripts/build_cpu_images.sh ci
+      - name: Check offline runtime dependencies
+        run: |
+          docker run --rm --network none --entrypoint /app/.venv/bin/python cpu-voice-bot/app:ci-${{ matrix.arch }} -c 'from services.offline import prepare_cpu_runtime; prepare_cpu_runtime(); from services.local_backends import create_local_services'
+          docker run --rm --network none --entrypoint /opt/asr/nemo-speech cpu-voice-bot/asr:ci-${{ matrix.arch }} --help
+          docker run --rm --network none --entrypoint /opt/llm/llama-server cpu-voice-bot/llm:ci-${{ matrix.arch }} --help
+          docker run --rm --network none --entrypoint /opt/voicevox_engine/run cpu-voice-bot/tts:ci-${{ matrix.arch }} --help
+      - name: Validate the deployment bundle
+        run: |
+          bash scripts/package_cpu_deploy.sh ci
+          mkdir /tmp/cpu-deploy
+          tar -xzf .build/cpu-deploy-ci.tar.gz -C /tmp/cpu-deploy
+          cd /tmp/cpu-deploy
+          CPU_ARCH=${{ matrix.arch }} docker compose --env-file .env.cpu.example --profile generic-assistant/cpu config

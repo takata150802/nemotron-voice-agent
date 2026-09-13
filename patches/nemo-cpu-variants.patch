@@ -1,0 +1,60 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -229,7 +229,10 @@
+         "Use patched CUDA FastConformer graph fusions" FORCE)
+ endif()
+ 
+-set(GGML_DEPENDENCIES ggml ggml-base ggml-cpu)
++set(GGML_DEPENDENCIES ggml ggml-base)
++if(NOT GGML_BACKEND_DL)
++    list(APPEND GGML_DEPENDENCIES ggml-cpu)
++endif()
+ if(GGML_CUDA)
+     list(APPEND GGML_DEPENDENCIES ggml-cuda)
+     # libggml-cuda.so has libcuda.so.1 (the CUDA driver) as a NEEDED entry.
+@@ -265,9 +268,14 @@
+ # required by our shared libraries. Its C++ headers, CMake package, pkg-config
+ # metadata, and tools are not part of the public NeMo-Speech.cpp SDK.
+ set_property(TARGET ggml PROPERTY PUBLIC_HEADER "")
+-install(TARGETS ggml ggml-base ggml-cpu
++install(TARGETS ggml ggml-base
+     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
++if(TARGET ggml-cpu)
++    install(TARGETS ggml-cpu
++        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
++endif()
+ if(TARGET ggml-blas)
+     install(TARGETS ggml-blas
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+--- a/src/runtime/ggml/backend.cpp
++++ b/src/runtime/ggml/backend.cpp
+@@ -10,6 +10,7 @@
+ 
+ #include "model_logging.h"
+ #include "runtime.h"
++#include <mutex>
+ 
+ namespace ggml_runtime {
+ 
+@@ -46,6 +47,10 @@
+         struct ggml_context* ctx = ggml_init(params);
+         ggml_free(ctx);
+     }
++
++    // Register the runtime-selected CPU variant once before querying devices.
++    static std::once_flag loaded_backends;
++    std::call_once(loaded_backends, ggml_backend_load_all);
+ 
+     auto dev_count = ggml_backend_dev_count();
+     GGMLF_LOG_INFO("Found %zu devices.\n", dev_count);
+@@ -133,7 +138,7 @@
+             ++extra_bufts;
+         }
+     }
+-    buft_list.emplace_back(cpu_dev, ggml_backend_cpu_buffer_type());
++    buft_list.emplace_back(cpu_dev, ggml_backend_dev_buffer_type(cpu_dev));
+ 
+     for (const auto& buft : buft_list) {
+         ggml_backend_dev_t dev = buft.first;

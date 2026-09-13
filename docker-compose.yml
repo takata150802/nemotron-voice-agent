@@ -45,6 +45,7 @@ name: nemotron-voice-agent
 #   docker compose --profile <recipe> --profile turn up      # coturn TURN
 
 include:
+  - path: docker/docker-compose.cpu.yaml
   - path: docker/docker-compose.nemotron3-nano.yaml
   - path: docker/docker-compose.nemotron3-super.yaml
   - path: docker/docker-compose.nemotron-asr.yaml

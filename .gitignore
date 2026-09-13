@@ -71,3 +71,6 @@ tests/test_voice_agent_eval.py
 
 .models/
 .build/
+
+# Per-host CPU container deployment settings
+.env.cpu

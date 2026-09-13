@@ -17,6 +17,8 @@ Ubuntu: Nemotron Voice Agent / Pipecat
 
 [CPU ローカル構成ガイド](docs/how-to/cpu-local.md) に、ビルド、モデル取得、設定、起動、Windows 接続、マイク権限、ファイアウォール、性能測定、およびトラブルシューティングを記載しています。[実装前の調査記録](docs/cpu-research.md) に API と置換方針を記載しています。
 
+Docker images を別の Linux host に転送して配布する手順は、[CPU Docker デプロイ](docs/how-to/cpu-docker.md) を参照してください。
+
 この作業環境では `.env`、モデル、CPU バイナリ、および client build を準備済みです。下記の起動コマンドから使用できます。検証サービスは終了しています。新しい環境では次の順で準備してください。既存の `.env` は上書きせず、CPU 設定を確認して統合してください。
 
 ```bash

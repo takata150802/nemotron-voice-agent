@@ -1,0 +1,67 @@
+# syntax=docker/dockerfile:1
+FROM node:22-bookworm-slim AS client-builder
+WORKDIR /client
+COPY client/package*.json ./
+RUN npm ci
+COPY client/ ./
+RUN npm run build
+
+FROM ubuntu:24.04 AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv ca-certificates curl libgomp1 libsentencepiece0 libgl1 libglib2.0-0 libxcb1 && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+ENV CPU_PYTHON=/usr/bin/python3 ENV_FILE=/nonexistent CUDA_VISIBLE_DEVICES=-1 HF_HUB_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 PYTHONPATH=/app/src
+COPY scripts/local_common.sh scripts/check_gguf.py scripts/run_nemo_speech.sh scripts/run_llama.sh scripts/run_tts.sh scripts/check_services.sh scripts/run_voice_agent.sh scripts/setup_tokenizer.py scripts/
+COPY LICENSE third_party_oss_license.txt /app/legal/
+
+FROM runtime AS compiler
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake ninja-build git libsentencepiece-dev && rm -rf /var/lib/apt/lists/*
+ARG BUILD_JOBS=4
+ARG NEMO_REVISION=a5b6953c4a579a2bbd1c0913ad8a85c2a4d99953
+ARG LLAMA_REVISION=56b9eb280a67796379d8625729fb03d72c70789d
+
+FROM compiler AS asr-builder
+COPY patches/nemo-cpu-threads.patch /tmp/cpu-threads.patch
+COPY patches/nemo-cpu-variants.patch /tmp/cpu-variants.patch
+RUN git clone https://github.com/NVIDIA/NeMo-Speech.cpp.git /source && cd /source && git checkout "$NEMO_REVISION" && git submodule update --init ggml third_party/cpp-httplib llama.cpp && git apply /tmp/cpu-threads.patch && git apply /tmp/cpu-variants.patch && scripts/configure.sh cpu-server -DNEMO_SPEECH_BUILD_TTS=OFF -DNEMO_SPEECH_BUILD_NMT=OFF -DNEMO_SPEECH_WITH_NMT=OFF -DGGML_CUDA=OFF -DGGML_VULKAN=OFF -DGGML_METAL=OFF -DGGML_NATIVE=OFF -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON && cmake --build --preset cpu-server --parallel "$BUILD_JOBS"
+
+FROM runtime AS asr
+COPY src/services/local_config.py src/services/local_config.py
+COPY src/services/__init__.py src/services/__init__.py
+COPY --from=asr-builder /source/build/cpu-server/bin/ /opt/asr/
+ENV NEMO_SPEECH_BIN=/opt/asr/nemo-speech LD_LIBRARY_PATH=/opt/asr
+CMD ["bash", "scripts/run_nemo_speech.sh"]
+
+FROM compiler AS llm-builder
+RUN git clone https://github.com/ggml-org/llama.cpp.git /source && cd /source && git checkout "$LLAMA_REVISION" && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=OFF -DGGML_VULKAN=OFF -DGGML_METAL=OFF -DGGML_NATIVE=OFF -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF && cmake --build build --target llama-server --parallel "$BUILD_JOBS"
+
+FROM runtime AS llm
+COPY src/services/local_config.py src/services/local_config.py
+COPY src/services/__init__.py src/services/__init__.py
+COPY --from=llm-builder /source/build/bin/ /opt/llm/
+ENV LLAMA_BIN=/opt/llm/llama-server LD_LIBRARY_PATH=/opt/llm
+CMD ["bash", "scripts/run_llama.sh"]
+
+FROM runtime AS app-builder
+ENV HF_HUB_OFFLINE=0
+COPY pyproject.toml uv.lock ./
+RUN python3 -m venv .venv && .venv/bin/pip install --no-cache-dir uv==0.12.13 && .venv/bin/uv sync --frozen --no-dev
+RUN python3 scripts/setup_tokenizer.py
+
+FROM runtime AS app
+COPY --from=app-builder /app/.venv/ /app/.venv/
+COPY --from=app-builder /app/.models/nltk/ /opt/nltk/
+COPY --from=client-builder /client/dist/ client/dist/
+COPY src/ src/
+COPY examples_registry.yaml ./
+ENV CPU_PYTHON=/app/.venv/bin/python NLTK_DATA=/opt/nltk PLATFORM=cpu
+CMD ["bash", "scripts/run_voice_agent.sh"]
+
+FROM voicevox/voicevox_engine:cpu-ubuntu22.04-0.25.2@sha256:148b7ade1e698893d8722b6bbd92c059f8796b4ab45449cf45e0601369e63455 AS tts
+RUN apt-get update && apt-get install -y --no-install-recommends python3 && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY scripts/local_common.sh scripts/run_tts.sh scripts/
+COPY src/services/local_config.py src/services/local_config.py
+COPY src/services/__init__.py src/services/__init__.py
+ENV CPU_PYTHON=/usr/bin/python3 ENV_FILE=/nonexistent PYTHONPATH=/app/src CUDA_VISIBLE_DEVICES=-1 VOICEVOX_BIN=/opt/voicevox_engine/run VOICEVOX_DATA_DIR=/data
+ENTRYPOINT []
+CMD ["bash", "scripts/run_tts.sh"]
